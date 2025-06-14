@@ -1,0 +1,351 @@
+{
+  "tools": [
+    {
+      "name": "str-replace-editor",
+      "description": "Tool for editing files. Supports string replacement and insertion operations with precise line number control. Can make multiple edits in one call.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "command": {
+            "type": "string",
+            "enum": ["str_replace", "insert"],
+            "description": "The commands to run. Allowed options are: 'str_replace', 'insert'."
+          },
+          "path": {
+            "type": "string",
+            "description": "Full path to file relative to the workspace root, e.g. 'services/api_proxy/file.py' or 'services/api_proxy'."
+          },
+          "instruction_reminder": {
+            "type": "string",
+            "description": "Reminder to limit edits to at most 150 lines. Should be exactly this string: 'ALWAYS BREAK DOWN EDITS INTO SMALLER CHUNKS OF AT MOST 150 LINES EACH.'"
+          },
+          "old_str_1": {
+            "type": "string",
+            "description": "Required parameter of `str_replace` command containing the string in `path` to replace."
+          },
+          "new_str_1": {
+            "type": "string",
+            "description": "Required parameter of `str_replace` command containing the new string. Can be an empty string to delete content. Required parameter of `insert` command containing the string to insert."
+          },
+          "old_str_start_line_number_1": {
+            "type": "integer",
+            "description": "The line number of the first line of `old_str_1` in the file. This is used to disambiguate between multiple occurrences of `old_str_1` in the file."
+          },
+          "old_str_end_line_number_1": {
+            "type": "integer",
+            "description": "The line number of the last line of `old_str_1` in the file. This is used to disambiguate between multiple occurrences of `old_str_1` in the file."
+          },
+          "insert_line_1": {
+            "type": "integer",
+            "description": "Required parameter of `insert` command. The line number after which to insert the new string. This line number is relative to the state of the file before any insertions in the current tool call have been applied."
+          }
+        },
+        "required": ["command", "path", "instruction_reminder"]
+      }
+    },
+    {
+      "name": "open-browser",
+      "description": "Open a URL in the default browser. Takes in a URL and opens it in the default browser. Does not return any content - intended for user visual inspection.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "The URL to open in the browser."
+          }
+        },
+        "required": ["url"]
+      }
+    },
+    {
+      "name": "diagnostics",
+      "description": "Get issues (errors, warnings, etc.) from the IDE. Must provide the paths of the files for which you want to get issues.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "paths": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Required list of file paths to get issues for from the IDE."
+          }
+        },
+        "required": ["paths"]
+      }
+    },
+    {
+      "name": "read-terminal",
+      "description": "Read output from the active or most-recently used VSCode terminal. By default, reads all visible text in the terminal. Can optionally read only selected text.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "only_selected": {
+            "type": "boolean",
+            "description": "Whether to read only the selected text in the terminal."
+          }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "launch-process",
+      "description": "Launch a new process with a shell command. Can be waiting (interactive terminal) or non-waiting (background process). Supports process management and interaction.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "command": {
+            "type": "string",
+            "description": "The shell command to execute."
+          },
+          "wait": {
+            "type": "boolean",
+            "description": "Whether to wait for the command to complete."
+          },
+          "max_wait_seconds": {
+            "type": "number",
+            "description": "Number of seconds to wait for the command to complete. Only relevant when wait=true. 10 minutes may be a good default: increase from there if needed."
+          },
+          "cwd": {
+            "type": "string",
+            "description": "Working directory for the command. If not supplied, uses the current working directory."
+          }
+        },
+        "required": ["command", "wait", "max_wait_seconds"]
+      }
+    },
+    {
+      "name": "kill-process",
+      "description": "Kill a process by its terminal ID.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "terminal_id": {
+            "type": "integer",
+            "description": "Terminal ID to kill."
+          }
+        },
+        "required": ["terminal_id"]
+      }
+    },
+    {
+      "name": "read-process",
+      "description": "Read output from a terminal. Can wait for process completion or return immediately with current output.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "terminal_id": {
+            "type": "integer",
+            "description": "Terminal ID to read from."
+          },
+          "wait": {
+            "type": "boolean",
+            "description": "Whether to wait for the command to complete."
+          },
+          "max_wait_seconds": {
+            "type": "number",
+            "description": "Number of seconds to wait for the command to complete. Only relevant when wait=true. 1 minute may be a good default: increase from there if needed."
+          }
+        },
+        "required": ["terminal_id", "wait", "max_wait_seconds"]
+      }
+    },
+    {
+      "name": "write-process",
+      "description": "Write input to a terminal.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "terminal_id": {
+            "type": "integer",
+            "description": "Terminal ID to write to."
+          },
+          "input_text": {
+            "type": "string",
+            "description": "Text to write to the process's stdin."
+          }
+        },
+        "required": ["terminal_id", "input_text"]
+      }
+    },
+    {
+      "name": "list-processes",
+      "description": "List all known terminals created with the launch-process tool and their states.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "name": "web-search",
+      "description": "Search the web for information. Returns results in markdown format. Each result includes the URL, title, and a snippet from the page if available. Uses Google's Custom Search API.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "The search query to send."
+          },
+          "num_results": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10,
+            "default": 5,
+            "description": "Number of results to return"
+          }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "web-fetch",
+      "description": "Fetches data from a webpage and converts it into Markdown. Takes in a URL and returns the content of the page in Markdown format.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "The URL to fetch."
+          }
+        },
+        "required": ["url"]
+      }
+    },
+    {
+      "name": "codebase-retrieval",
+      "description": "Augment's context engine, the world's best codebase context engine. Takes in a natural language description of the code you are looking for and uses proprietary retrieval/embedding models to find relevant code snippets from across the codebase.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "information_request": {
+            "type": "string",
+            "description": "A description of the information you need."
+          }
+        },
+        "required": ["information_request"]
+      }
+    },
+    {
+      "name": "remove-files",
+      "description": "Remove files. ONLY use this tool to delete files in the user's workspace. This is the only safe tool to delete files in a way that the user can undo the change.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "file_paths": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The paths of the files to remove."
+          }
+        },
+        "required": ["file_paths"]
+      }
+    },
+    {
+      "name": "save-file",
+      "description": "Save a new file. Use this tool to write new files with the attached content. Cannot modify existing files - use str-replace-editor for editing existing files.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "instructions_reminder": {
+            "type": "string",
+            "description": "Should be exactly this string: 'LIMIT THE FILE CONTENT TO AT MOST 300 LINES. IF MORE CONTENT NEEDS TO BE ADDED USE THE str-replace-editor TOOL TO EDIT THE FILE AFTER IT HAS BEEN CREATED.'"
+          },
+          "path": {
+            "type": "string",
+            "description": "The path of the file to save."
+          },
+          "file_content": {
+            "type": "string",
+            "description": "The content of the file."
+          },
+          "add_last_line_newline": {
+            "type": "boolean",
+            "description": "Whether to add a newline at the end of the file (default: true)."
+          }
+        },
+        "required": ["instructions_reminder", "path", "file_content"]
+      }
+    },
+    {
+      "name": "remember",
+      "description": "Call this tool when user asks you to remember something or to create memory/memories. Use this tool only with information that can be useful in the long-term. Do not use this tool for temporary information.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "memory": {
+            "type": "string",
+            "description": "The concise (1 sentence) memory to remember."
+          }
+        },
+        "required": ["memory"]
+      }
+    },
+    {
+      "name": "render-mermaid",
+      "description": "Render a Mermaid diagram from the provided definition. Takes Mermaid diagram code and renders it as an interactive diagram with pan/zoom controls and copy functionality.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "diagram_definition": {
+            "type": "string",
+            "description": "The Mermaid diagram definition code to render"
+          },
+          "title": {
+            "type": "string",
+            "default": "Mermaid Diagram",
+            "description": "Optional title for the diagram"
+          }
+        },
+        "required": ["diagram_definition"]
+      }
+    },
+    {
+      "name": "view",
+      "description": "Custom tool for viewing files and directories and searching within files with regex query. For files: displays the result of applying `cat -n` to the file. For directories: lists files and subdirectories up to 2 levels deep. Supports regex search with context lines.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Full path to file or directory relative to the workspace root, e.g. 'services/api_proxy/file.py' or 'services/api_proxy'."
+          },
+          "type": {
+            "type": "string",
+            "enum": ["file", "directory"],
+            "description": "Type of path to view. Allowed options are: 'file', 'directory'."
+          },
+          "view_range": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": "Optional parameter when `path` points to a file. If none is given, the full file is shown. If provided, the file will be shown in the indicated line number range, e.g. [501, 1000] will show lines from 501 to 1000. Indices are 1-based and inclusive. Setting `[start_line, -1]` shows all lines from `start_line` to the end of the file."
+          },
+          "search_query_regex": {
+            "type": "string",
+            "description": "Optional parameter for files only. The regex pattern to search for. Only use core regex syntax common to JavaScript and Rust. When specified, only lines matching the pattern (plus context lines) will be shown. Non-matching sections are replaced with '...'."
+          },
+          "case_sensitive": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether the regex search should be case-sensitive. Only used when search_query_regex is specified. Default: false (case-insensitive)."
+          },
+          "context_lines_before": {
+            "type": "integer",
+            "default": 5,
+            "description": "Number of lines to show before each regex match. Only used when search_query_regex is specified. Default: 5."
+          },
+          "context_lines_after": {
+            "type": "integer",
+            "default": 5,
+            "description": "Number of lines to show after each regex match. Only used when search_query_regex is specified. Default: 5."
+          }
+        },
+        "required": ["path", "type"]
+      }
+    }
+  ]
+}

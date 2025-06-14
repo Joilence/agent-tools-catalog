@@ -1,0 +1,383 @@
+{
+  "tools": [
+    {
+      "name": "Task",
+      "description": "Launch a new agent that has access to tools for searching, reading, editing, and analyzing code. Use when searching for keywords or files and not confident you'll find the right match quickly.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "description": "A short (3-5 word) description of the task"
+          },
+          "prompt": {
+            "type": "string", 
+            "description": "The task for the agent to perform"
+          }
+        },
+        "required": ["description", "prompt"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "Bash",
+      "description": "Executes bash commands in a persistent shell session with proper security measures and timeout handling.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "command": {
+            "type": "string",
+            "description": "The command to execute"
+          },
+          "description": {
+            "type": "string",
+            "description": "Clear, concise description of what this command does in 5-10 words"
+          },
+          "timeout": {
+            "type": "number",
+            "description": "Optional timeout in milliseconds (max 600000)"
+          }
+        },
+        "required": ["command"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "Glob",
+      "description": "Fast file pattern matching tool that supports glob patterns like '**/*.js' or 'src/**/*.ts'. Returns matching file paths sorted by modification time.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "pattern": {
+            "type": "string",
+            "description": "The glob pattern to match files against"
+          },
+          "path": {
+            "type": "string",
+            "description": "The directory to search in. If not specified, uses current working directory"
+          }
+        },
+        "required": ["pattern"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "Grep",
+      "description": "Fast content search tool that searches file contents using regular expressions. Supports full regex syntax and file filtering.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "pattern": {
+            "type": "string",
+            "description": "The regular expression pattern to search for in file contents"
+          },
+          "path": {
+            "type": "string",
+            "description": "The directory to search in. Defaults to current working directory"
+          },
+          "include": {
+            "type": "string",
+            "description": "File pattern to include in the search (e.g. '*.js', '*.{ts,tsx}')"
+          }
+        },
+        "required": ["pattern"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "LS",
+      "description": "Lists files and directories in a given path. Takes absolute paths and supports glob patterns to ignore files.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "The absolute path to the directory to list"
+          },
+          "ignore": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of glob patterns to ignore"
+          }
+        },
+        "required": ["path"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "exit_plan_mode",
+      "description": "Use when in plan mode and ready to exit to start coding after presenting your plan.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "plan": {
+            "type": "string",
+            "description": "The plan you came up with for user approval. Supports markdown."
+          }
+        },
+        "required": ["plan"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "Read",
+      "description": "Reads files from the local filesystem. Supports images, text files, and various formats. Returns content with line numbers.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "file_path": {
+            "type": "string",
+            "description": "The absolute path to the file to read"
+          },
+          "offset": {
+            "type": "number",
+            "description": "The line number to start reading from"
+          },
+          "limit": {
+            "type": "number",
+            "description": "The number of lines to read"
+          }
+        },
+        "required": ["file_path"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "Edit",
+      "description": "Performs exact string replacements in files. Must read file first before editing.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "file_path": {
+            "type": "string",
+            "description": "The absolute path to the file to modify"
+          },
+          "old_string": {
+            "type": "string",
+            "description": "The text to replace"
+          },
+          "new_string": {
+            "type": "string",
+            "description": "The text to replace it with"
+          },
+          "replace_all": {
+            "type": "boolean",
+            "description": "Replace all occurrences of old_string (default false)",
+            "default": false
+          }
+        },
+        "required": ["file_path", "old_string", "new_string"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "MultiEdit",
+      "description": "Makes multiple edits to a single file in one operation. All edits are applied sequentially and atomically.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "file_path": {
+            "type": "string",
+            "description": "The absolute path to the file to modify"
+          },
+          "edits": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "old_string": {
+                  "type": "string",
+                  "description": "The text to replace"
+                },
+                "new_string": {
+                  "type": "string",
+                  "description": "The text to replace it with"
+                },
+                "replace_all": {
+                  "type": "boolean",
+                  "description": "Replace all occurrences of old_string (default false)",
+                  "default": false
+                }
+              },
+              "required": ["old_string", "new_string"],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "description": "Array of edit operations to perform sequentially"
+          }
+        },
+        "required": ["file_path", "edits"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "Write",
+      "description": "Writes a file to the local filesystem. Will overwrite existing files. Must read existing files first before writing.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "file_path": {
+            "type": "string",
+            "description": "The absolute path to the file to write"
+          },
+          "content": {
+            "type": "string",
+            "description": "The content to write to the file"
+          }
+        },
+        "required": ["file_path", "content"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "NotebookRead",
+      "description": "Reads Jupyter notebook (.ipynb) files and returns all cells with their outputs.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "notebook_path": {
+            "type": "string",
+            "description": "The absolute path to the Jupyter notebook file to read"
+          },
+          "cell_id": {
+            "type": "string",
+            "description": "The ID of a specific cell to read. If not provided, all cells will be read"
+          }
+        },
+        "required": ["notebook_path"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "NotebookEdit",
+      "description": "Edits Jupyter notebook cells by replacing, inserting, or deleting cells.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "notebook_path": {
+            "type": "string",
+            "description": "The absolute path to the Jupyter notebook file to edit"
+          },
+          "cell_id": {
+            "type": ["string", "null"],
+            "description": "The ID of the cell to edit"
+          },
+          "new_source": {
+            "type": "string",
+            "description": "The new source for the cell"
+          },
+          "cell_type": {
+            "type": "string",
+            "enum": ["code", "markdown"],
+            "description": "The type of the cell (code or markdown)"
+          },
+          "edit_mode": {
+            "type": "string",
+            "enum": ["replace", "insert", "delete"],
+            "description": "The type of edit to make (replace, insert, delete). Defaults to replace"
+          }
+        },
+        "required": ["notebook_path", "cell_id", "new_source"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "WebFetch",
+      "description": "Fetches content from a URL and processes it using an AI model to extract information based on a prompt.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "The URL to fetch content from"
+          },
+          "prompt": {
+            "type": "string",
+            "description": "The prompt to run on the fetched content"
+          }
+        },
+        "required": ["url", "prompt"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "TodoRead",
+      "description": "Reads the current to-do list for the session. Returns list of todo items with their status, priority, and content.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "TodoWrite",
+      "description": "Creates and manages a structured task list for the current coding session to track progress and organize complex tasks.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "todos": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "content": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "status": {
+                  "type": "string",
+                  "enum": ["pending", "in_progress", "completed"]
+                },
+                "priority": {
+                  "type": "string",
+                  "enum": ["high", "medium", "low"]
+                }
+              },
+              "required": ["content", "status", "priority", "id"],
+              "additionalProperties": false
+            },
+            "description": "The updated todo list"
+          }
+        },
+        "required": ["todos"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "WebSearch",
+      "description": "Searches the web and returns search result information. Provides up-to-date information for current events and recent data.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "minLength": 2,
+            "description": "The search query to use"
+          },
+          "allowed_domains": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Only include search results from these domains"
+          },
+          "blocked_domains": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Never include search results from these domains"
+          }
+        },
+        "required": ["query"],
+        "additionalProperties": false
+      }
+    }
+  ]
+}

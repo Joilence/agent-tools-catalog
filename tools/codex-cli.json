@@ -1,0 +1,45 @@
+{
+  "tools": [
+    {
+      "name": "apply_patch",
+      "description": "Applies a unified-diff patch to one or more files in the working tree and automatically stages the change for commit.",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "properties": {
+          "patch": {
+            "type": "string",
+            "description": "The full unified-diff patch text to apply"
+          }
+        },
+        "required": ["patch"],
+        "type": "object"
+      }
+    },
+    {
+      "name": "functions.shell",
+      "description": "Spawns a subprocess to run shell commands in the sandboxed repository and captures their stdout, stderr, and exit code.",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "properties": {
+          "command": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Command name and each argument, e.g. [\"rg\", \"--ignore-case\", \"TODO\"]"
+          },
+          "workdir": {
+            "type": "string",
+            "description": "Optional working directory; defaults to repo root"
+          },
+          "timeout": {
+            "type": "number",
+            "description": "Optional maximum time in milliseconds before killing the process"
+          }
+        },
+        "required": ["command"],
+        "type": "object"
+      }
+    }
+  ]
+}
